@@ -1,42 +1,29 @@
 #!/usr/bin/env python3
-"""
-Auth class
-"""
-
-from tabnanny import check
+"""Authenication module for flask api"""
 from flask import request
-from typing import TypeVar, List
-User = TypeVar('User')
+from typing import List, TypeVar
 
 
-class Auth:
-    """
-    a class to manage the API authentication
-    """
+class Auth():
+    """Represents authenication to api"""
 
     def require_auth(self, path: str, excluded_paths: List[str]) -> bool:
-        """
-        returns False - path and excluded_paths
-        """
-        check = path
-        if path is None or excluded_paths is None or len(excluded_paths) == 0:
+        """returns true if path is authorized not in excluded_paths"""
+        if not path or not excluded_paths:
             return True
-        if path[-1] != "/":
-            check += "/"
-        if check in excluded_paths or path in excluded_paths:
-            return False
+        path = path.rstrip('/')
+        for ex_path in excluded_paths:
+            ex_path = ex_path.rstrip('/')
+            if path.startswith(ex_path[0:-1]) or path == ex_path:
+                return False
         return True
 
-    def authorization_header(self, request=None) -> str:
-        """
-        returns None - request
-        """
-        if request is None:
+    def authorization_header(self, request: request = None) -> str:
+        """returns authorization header value"""
+        if request is None or 'Authorization' not in request.headers:
             return None
-        return request.headers.get("Authorization")
+        return request.headers.get('Authorization')
 
-    def current_user(self, request=None) -> User:
-        """
-        returns None - request
-        """
+    def current_user(self, request=None) -> TypeVar('User'):
+        """User Authorization"""
         return None
