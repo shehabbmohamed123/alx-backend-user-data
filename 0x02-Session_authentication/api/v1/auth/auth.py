@@ -1,51 +1,38 @@
 #!/usr/bin/env python3
-"""
-Auth class
-"""
-
-from tabnanny import check
+"""Authenication module for flask api"""
 from flask import request
-from typing import TypeVar, List
-from os import getenv
-User = TypeVar('User')
+from typing import List, TypeVar
+import os
 
 
 class Auth:
-    """
-    a class to manage the API authentication
-    """
+    """Represents authenication to api"""
 
     def require_auth(self, path: str, excluded_paths: List[str]) -> bool:
-        """
-        returns False - path and excluded_paths
-        """
-        check = path
-        if path is None or excluded_paths is None or len(excluded_paths) == 0:
+        """returns true if path is authorized not in excluded_paths"""
+        if not path or not excluded_paths:
             return True
-        if path[-1] != "/":
-            check += "/"
-        if check in excluded_paths or path in excluded_paths:
-            return False
+        path = path.rstrip('/')
+        for ex_path in excluded_paths:
+            ex_path = ex_path.rstrip('/')
+            if path.startswith(ex_path[0:-1]) or path == ex_path:
+                return False
         return True
 
-    def authorization_header(self, request=None) -> str:
-        """
-        returns None - request
-        """
-        if request is None:
+    def authorization_header(self, request: request = None) -> str:
+        """returns authorization header value"""
+        if request is None or 'Authorization' not in request.headers:
             return None
-        return request.headers.get("Authorization")
+        return request.headers.get('Authorization')
 
-    def current_user(self, request=None) -> User:
-        """
-        returns None - request
-        """
+    def current_user(self, request=None) -> TypeVar('User'):
+        """User Authorization"""
         return None
 
-    def session_cookie(self, request=None):
-        """
-        returns a cookie value from a request
-        """
-        if request:
-            session_name = getenv("SESSION_NAME")
-            return request.cookie.get(session_name, None)
+    def session_cookie(self, request=None) -> str:
+        """Retrieves session id from cookie of request"""
+        if request is None:
+            return None
+        cookie_name = os.getenv('SESSION_NAME')
+        if cookie_name:
+            return request.cookies.get(cookie_name)
